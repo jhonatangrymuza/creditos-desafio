@@ -1,0 +1,240 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: creditos-api
+
+  # Configuração do PostgreSQL com variáveis de ambiente
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/creditos_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:1234}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      auto-commit: false
+
+  # Configuração JPA/Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        temp:
+          use_jdbc_metadata_defaults: false
+    open-in-view: false
+
+  # Configuração do Kafka com variáveis de ambiente
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    # Configurações do Producer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      batch-size: 16384
+      buffer-memory: 33554432
+      compression-type: snappy
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        retry.backoff.ms: 1000
+
+    # Configurações do Consumer
+    consumer:
+      group-id: creditos-api-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "com.credit.dto,com.credit.entity"
+        session.timeout.ms: 30000
+        heartbeat.interval.ms: 3000
+
+    # Configurações dos tópicos
+    template:
+      default-topic: creditos-eventos
+
+    # Configurações de listener
+    listener:
+      ack-mode: manual_immediate
+      concurrency: 3
+      poll-timeout: 3000
+
+  # Configuração de profiles
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+# Configurações do servidor
+server:
+  port: ${SERVER_PORT:8080}
+  compression:
+    enabled: true
+  http2:
+    enabled: true
+
+# Configurações de logging
+logging:
+  level:
+    com.credit: ${LOG_LEVEL:DEBUG}
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE:logs/creditos-api.log}
+
+# Configurações do Actuator (monitoramento)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,kafka
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Configurações customizadas da aplicação
+app:
+  kafka:
+    topics:
+      creditos-consultas: creditos-consultas
+      creditos-eventos: creditos-eventos
+      creditos-auditoria: creditos-auditoria
+
+  cache:
+    creditos:
+      ttl: 300 # 5 minutos
+      max-entries: 1000
+
+  database:
+    connection-pool:
+      min-size: 5
+      max-size: 20
+
+---
+# Profile de desenvolvimento
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/creditos_db
+    username: postgres
+    password: 1234
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+
+logging:
+  level:
+    com.credit: DEBUG
+    org.springframework.kafka: DEBUG
+
+---
+# Profile de produção
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/creditos_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      retries: 5
+    consumer:
+      enable-auto-commit: false
+
+logging:
+  level:
+    com.credit: INFO
+    org.springframework.kafka: WARN
+  file:
+    name: /var/log/creditos-api/application.log
+
+---
+# Profile do Docker
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    com.credit: INFO
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: WARN
+
+---
+# Profile de teste
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  kafka:
+    producer:
+      bootstrap-servers: ${spring.embedded.kafka.brokers}
+    consumer:
+      bootstrap-servers: ${spring.embedded.kafka.brokers}
+
+logging:
+  level:
+    com.credit: DEBUG
