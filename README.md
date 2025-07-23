@@ -13,7 +13,7 @@ Sistema completo para consulta de créditos constituídos, desenvolvido com **Sp
 ## 📁 Estrutura do Projeto
 
 ```
-credito/
+creditos-desafio/
 ├── README.md                     # Este arquivo
 ├── docker-compose.yml            # Orquestração dos containers
 ├── api-credito/                  # Backend Spring Boot
