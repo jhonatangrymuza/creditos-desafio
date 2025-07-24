@@ -1,8 +1,8 @@
 FROM openjdk:11-jdk-slim AS builder
 RUN apt-get update && apt-get install -y maven
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
+COPY ../pom.xml .
+COPY ../src ./src
 
 RUN mvn clean package -DskipTests
 

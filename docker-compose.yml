@@ -27,7 +27,7 @@ services:
   backend:
     build:
       context: ./api-credito  # Pasta do backend
-      dockerfile: Dockerfile
+      dockerfile: devops/Dockerfile
     container_name: backend-creditos
     environment:
       # Configurações do banco
@@ -63,7 +63,7 @@ services:
   frontend:
     build:
       context: ./front-credito  # Pasta do frontend
-      dockerfile: Dockerfile
+      dockerfile: devops/Dockerfile
     container_name: frontend-creditos
     ports:
       - "80:80"

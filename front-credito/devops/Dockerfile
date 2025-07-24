@@ -20,7 +20,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copiar configuração customizada do Nginx
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY devops/nginx.conf /etc/nginx/nginx.conf
 
 # Copiar arquivos buildados
 COPY --from=builder /app/dist/creditos-frontend /usr/share/nginx/html

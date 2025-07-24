@@ -20,13 +20,17 @@ creditos-desafio/
 │   ├── src/
 │   ├── pom.xml
 │   ├── Dockerfile
-│   └── scripts/
-│       └── init-db.sql           # Script de inicialização do banco
+│   ├── scripts/
+│       └── init-db.sql          # Script de inicialização do banco
+│   └── devops/
+│       └──  Dockerfile
 └── front-credito/               # Frontend Angular
     ├── src/
-    ├── package.json
-    ├── Dockerfile
-    └── nginx.conf               # Configuração do Nginx
+    ├──package.json
+    └── devops/
+        └──  Dockerfile
+        └── nginx.conf           # Configuração do Nginx
+
 ```
 
 ## 🚀 Como Executar o Projeto
